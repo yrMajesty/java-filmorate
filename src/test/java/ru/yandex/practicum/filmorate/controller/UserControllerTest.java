@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exception.NoSuchUserException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.UserRepository;
@@ -11,6 +10,7 @@ import ru.yandex.practicum.filmorate.repository.UserRepository;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import java.time.LocalDate;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -109,7 +109,7 @@ public class UserControllerTest {
     void updateUser_validationException_userIdIsNotExist() {
         userController.createUser(user);
         User newUser = new User(10L, "user@mail.ru", "userLogin1", "userName", LocalDate.now());
-        assertThrows(NoSuchUserException.class, () -> userController.updateUser(newUser),
+        assertThrows(NoSuchElementException.class, () -> userController.updateUser(newUser),
                 "Нет ошибки валидации при обновлении пользователя с id которого нет в базе");
     }
 }

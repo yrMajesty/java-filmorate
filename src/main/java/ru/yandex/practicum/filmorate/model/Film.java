@@ -14,7 +14,6 @@ import java.util.Objects;
 @NoArgsConstructor
 public class Film {
 
-    @Null
     private Long id;
 
     @NotBlank(message = "Названием фильма не может быть пустым или null")

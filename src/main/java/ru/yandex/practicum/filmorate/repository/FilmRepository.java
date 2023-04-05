@@ -1,15 +1,17 @@
 package ru.yandex.practicum.filmorate.repository;
 
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.exception.NoSuchFilmException;
+import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @Slf4j
+@Component
 public class FilmRepository {
     private long idFilm = 0;
     private final Map<Long, Film> films = new HashMap<>();
@@ -34,7 +36,7 @@ public class FilmRepository {
 
         if (!films.containsKey(film.getId())) {
             log.error("Film with id='{}' is not exist", film.getId());
-            throw new NoSuchFilmException("Фильм с id='" + film.getId() + "' не существует");
+            throw new NoSuchElementException("Фильм с id='" + film.getId() + "' не существует");
         }
 
         films.put(film.getId(), film);

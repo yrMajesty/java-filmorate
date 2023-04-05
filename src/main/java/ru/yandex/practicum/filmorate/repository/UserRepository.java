@@ -1,15 +1,17 @@
 package ru.yandex.practicum.filmorate.repository;
 
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.exception.NoSuchUserException;
+import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @Slf4j
+@Component
 public class UserRepository {
     private long idUser = 0;
     private final Map<Long, User> users = new HashMap<>();
@@ -40,7 +42,7 @@ public class UserRepository {
 
         if (!users.containsKey(user.getId())) {
             log.error("User with id='{}' is not exist", user.getId());
-            throw new NoSuchUserException("Пользователь с id='" + user.getId() + "' не существует");
+            throw new NoSuchElementException("Пользователь с id='" + user.getId() + "' не существует");
         }
 
         users.put(user.getId(), user);
