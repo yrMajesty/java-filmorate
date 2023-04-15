@@ -11,7 +11,7 @@ import java.util.*;
 @Repository
 public class MemoryUserRepository implements UserRepository {
 
-    private long idUser = 1;
+    private long idUser = 0;
 
     private final Map<Long, User> users = new HashMap<>();
 
