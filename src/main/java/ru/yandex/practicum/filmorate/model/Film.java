@@ -35,7 +35,7 @@ public class Film {
     @JsonIgnore
     private final Set<Long> userLikes = new HashSet<>();
 
-    public void addLike(Long idUser){
+    public void addLike(Long idUser) {
         userLikes.add(idUser);
     }
 
