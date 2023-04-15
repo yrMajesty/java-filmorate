@@ -3,9 +3,15 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exception.ExistFilmException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.repository.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.UserRepository;
+import ru.yandex.practicum.filmorate.repository.impl.MemoryFilmRepository;
+import ru.yandex.practicum.filmorate.repository.impl.MemoryUserRepository;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -26,8 +32,10 @@ public class FilmControllerTest {
 
     @BeforeEach
     void init() {
+        FilmRepository filmRepository = new MemoryFilmRepository();
+        UserRepository userRepository = new MemoryUserRepository();
         film = new Film(null, "Название фильма", "Описание фильма", LocalDate.now(), 60);
-        filmController = new FilmController(new FilmRepository());
+        filmController = new FilmController(new FilmService(filmRepository, new UserService(userRepository)));
     }
 
     @Test
@@ -93,10 +101,10 @@ public class FilmControllerTest {
     }
 
     @Test
-    void addFilm_validationException_filmAlreadyExist() {
+    void addFilm_existFilmException_filmAlreadyExist() {
         filmController.createFilm(film);
         Film newFilm = new Film(null, "Название фильма", "Описание фильма", LocalDate.now(), 60);
-        assertThrows(ValidationException.class, () -> filmController.createFilm(newFilm),
+        assertThrows(ExistFilmException.class, () -> filmController.createFilm(newFilm),
                 "Нет ошибки при создании фильма, который уже есть в базе");
     }
 
