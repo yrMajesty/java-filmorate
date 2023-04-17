@@ -10,4 +10,8 @@ public interface FilmRepository extends Repository<Film, Long> {
 
     boolean existsByUniqueFields(Film film);
 
+    void addLike(Long filmId, Long userId);
+
+    void deleteLike(Long filmId, Long userId);
+
 }

@@ -54,7 +54,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
                 .body(response);
     }
 
-    @ExceptionHandler(value = {NoSuchFilmException.class, NoSuchUserException.class})
+    @ExceptionHandler(value = {NoSuchElementException.class})
     public ResponseEntity<Object> handleNoSuchElementException(final NoSuchElementException ex) {
         Map<String, Object> response = new LinkedHashMap<>();
 
@@ -67,20 +67,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
                 .body(response);
     }
 
-    @ExceptionHandler(value = {ExistUserException.class, ExistFilmException.class})
-    public ResponseEntity<Object> handleExistElementException(final RuntimeException ex) {
-        Map<String, Object> response = new LinkedHashMap<>();
-
-        response.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        response.put("status", HttpStatus.BAD_REQUEST.name());
-        response.put("message", ex.getMessage());
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(response);
-    }
-
-    @ExceptionHandler(value = {Exception.class, FilmorateException.class})
+    @ExceptionHandler(value = Exception.class)
     public ResponseEntity<Object> handleException(final Exception ex) {
         Map<String, Object> response = new LinkedHashMap<>();
 
@@ -94,3 +81,4 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     }
 
 }
+

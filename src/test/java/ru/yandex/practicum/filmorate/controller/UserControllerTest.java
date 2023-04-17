@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.impl.MemoryUserRepository;
 import ru.yandex.practicum.filmorate.service.UserService;
 
+
 import javax.validation.Validation;
 import javax.validation.Validator;
 import java.time.LocalDate;
@@ -27,7 +28,13 @@ public class UserControllerTest {
 
     @BeforeEach
     void init() {
-        user = new User(null, "user@mail.ru", "userLogin", "userName", LocalDate.now());
+        user = User
+                .builder()
+                .email("user@mail.ru")
+                .login("userLogin")
+                .name("userName")
+                .birthday(LocalDate.now())
+                .build();
         UserService userService = new UserService(new MemoryUserRepository());
         userController = new UserController(userService);
     }

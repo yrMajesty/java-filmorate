@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
-import ru.yandex.practicum.filmorate.exception.*;
+import ru.yandex.practicum.filmorate.exception.ExistElementException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.repository.FilmRepository;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Slf4j
@@ -24,17 +26,12 @@ public class FilmService {
 
         if (filmRepository.existsByUniqueFields(film)) {
             log.error("Film same as {} already exists", film);
-            throw new ExistFilmException("Фильм с такими параметрами уже существует");
+            throw new ExistElementException("Фильм с такими параметрами уже существует");
         }
-
-        Optional<Film> optionalFilm = filmRepository.save(film);
-
-        if (optionalFilm.isEmpty()) {
-            throw new FilmorateException("Ошибка сохранения");
-        }
+        filmRepository.save(film);
 
         log.info("Successful added new film {}", film);
-        return optionalFilm.get();
+        return film;
     }
 
     public Film updateFilm(@RequestBody Film film) {
@@ -50,26 +47,19 @@ public class FilmService {
 
         if (filmOptional.isEmpty()) {
             log.error("Film with  id='{}' not found", film);
-            throw new NoSuchFilmException("Фильм с id='" + film.getId() + "' не найден");
+            throw new NoSuchElementException("Фильм с id='" + film.getId() + "' не найден");
         }
-
-        Optional<Film> optionalFilm = filmRepository.update(film);
-
-        if (optionalFilm.isEmpty()) {
-            throw new FilmorateException("Ошибка сохранения");
-        }
-
         log.info("Successful update film {}", film);
-        return optionalFilm.get();
+        return film;
     }
 
     public Film getFilmById(Long id) {
         log.info("Request get film by id='{}'", id);
-        return filmRepository.findById(id).or(
+        return filmRepository.findById(id).orElseThrow(
                 () -> {
                     log.error("Film with  id='{}' not found", id);
-                    throw new NoSuchFilmException("Film with id='" + id + "' not found");
-                }).get();
+                    throw new NoSuchElementException("Film with id='" + id + "' not found");
+                });
     }
 
     public List<Film> getAllFilms() {
@@ -78,14 +68,13 @@ public class FilmService {
     }
 
     public void addLikeByFilmId(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
-        film.addLike(userId);
+        log.info("Request add like user with id='{}' to film by id='{}'", userId, filmId);
+        filmRepository.addLike(filmId, userId);
     }
 
     public void deleteLikeByFilmId(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
-        userService.getUserById(userId);
-        film.deleteLike(userId);
+        log.info("Request delete like user with id='{}' to film by id='{}'", userId, filmId);
+        filmRepository.deleteLike(filmId, userId);
     }
 
     public List<Film> getPopularFilms(Integer count) {

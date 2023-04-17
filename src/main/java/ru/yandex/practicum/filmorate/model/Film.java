@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.constraint.FilmDateRelease;
@@ -12,6 +13,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+@Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -34,14 +36,6 @@ public class Film {
 
     @JsonIgnore
     private final Set<Long> userLikes = new HashSet<>();
-
-    public void addLike(Long idUser) {
-        userLikes.add(idUser);
-    }
-
-    public void deleteLike(Long idUser) {
-        userLikes.remove(idUser);
-    }
 
     @Override
     public boolean equals(Object o) {
