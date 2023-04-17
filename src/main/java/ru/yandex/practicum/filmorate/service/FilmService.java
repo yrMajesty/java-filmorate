@@ -49,6 +49,8 @@ public class FilmService {
             log.error("Film with  id='{}' not found", film);
             throw new NoSuchElementException("Фильм с id='" + film.getId() + "' не найден");
         }
+
+        filmRepository.update(film);
         log.info("Successful update film {}", film);
         return film;
     }
