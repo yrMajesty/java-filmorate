@@ -1,32 +1,35 @@
-package ru.yandex.practicum.filmorate.repository.impl;
+package ru.yandex.practicum.filmorate.repository.impl.memory;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.ExistElementException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.UserRepository;
+import ru.yandex.practicum.filmorate.repository.UserDao;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
 
 import java.util.*;
 
 @Slf4j
 @Repository
-public class MemoryUserRepository implements UserRepository {
+public class MemoryUserRepository implements UserDao {
 
     private long idUser = 0;
 
     private final Map<Long, User> users = new HashMap<>();
 
     @Override
-    public Optional<User> save(User user) {
-        checkExistUserByLogin(user.getLogin());
+    public User save(User user) {
         user.setId(++idUser);
         users.put(user.getId(), user);
-        return Optional.of(user);
+        return user;
     }
 
     @Override
-    public Optional<User> findById(Long id) {
-        return Optional.ofNullable(users.get(id));
+    public User findById(Long id) {
+        User foundedUser = users.get(id);
+        if (foundedUser == null) {
+            throw new NoSuchElementException("User with id='" + id + "' not found");
+        }
+        return foundedUser;
     }
 
     @Override
@@ -34,48 +37,24 @@ public class MemoryUserRepository implements UserRepository {
         return new ArrayList<>(users.values());
     }
 
+
     @Override
-    public List<User> findUsersByIds(Set<Long> usersIds) {
-        List<User> foundUsers = new ArrayList<>();
-
-        for (Long id : usersIds) {
-            foundUsers.add(users.get(id));
-        }
-
-        return foundUsers;
+    public boolean isExistUserWithLogin(String login) {
+        return users.values()
+                .stream()
+                .anyMatch(user -> user.getLogin().equals(login));
     }
 
     @Override
-    public Optional<User> findByLogin(String login) {
-        for (User user : users.values()) {
-            if (user.getLogin().equals(login)) {
-                return Optional.of(user);
-            }
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<User>  update(User user) {
-        checkNotExistUserById(user.getId());
-        checkExistUserByLogin(user.getLogin());
-
-        users.put(user.getId(), user);
-        return Optional.of(user);
-
+    public boolean isExistUserById(Long id) {
+        return users.get(id) != null;
     }
 
     @Override
     public void addFriend(Long userId, Long friendId) {
         log.info("User with id='{}' add friend with id='{}'", userId, friendId);
-        User foundUser = users.get(userId);
-        if (foundUser == null) {
-            throw new NoSuchElementException("User with id='" + userId + "' not found");
-        }
-        User foundFriend = users.get(friendId);
-        if (foundFriend == null) {
-            throw new NoSuchElementException("User with id='" + friendId + "' not found");
-        }
+        User foundUser = findById(userId);
+        User foundFriend = findById(friendId);
 
         foundUser.getFriends().add(friendId);
         foundFriend.getFriends().add(userId);
@@ -86,14 +65,8 @@ public class MemoryUserRepository implements UserRepository {
     public void deleteFriend(Long userId, Long friendId) {
         log.info("User with id='{}' delete friend with id='{}'", userId, friendId);
 
-        User foundUser = users.get(userId);
-        if (foundUser == null) {
-            throw new NoSuchElementException("User with id='" + userId + "' not found");
-        }
-        User foundFriend = users.get(friendId);
-        if (foundFriend == null) {
-            throw new NoSuchElementException("User with id='" + friendId + "' not found");
-        }
+        User foundUser = findById(userId);
+        User foundFriend = findById(friendId);
 
         foundUser.getFriends().remove(friendId);
         foundFriend.getFriends().remove(userId);
@@ -103,24 +76,15 @@ public class MemoryUserRepository implements UserRepository {
     @Override
     public List<User> getFriendsByUserId(Long userId) {
         log.info("Get friends user with id='{}'", userId);
-        User user = users.get(userId);
-        if (user == null) {
-            throw new NoSuchElementException("User with id='" + userId + "' not found");
-        }
+        User user = findById(userId);
         return findUsersByIds(user.getFriends());
     }
 
     @Override
     public List<User> getCommonFriends(Long id, Long otherId) {
         log.info("Request get common friends users id='{}' and id='{}'", id, otherId);
-        User user = users.get(id);
-        if (user == null) {
-            throw new NoSuchElementException("User with id='" + id + "' not found");
-        }
-        User otherUser = users.get(otherId);
-        if (otherUser == null) {
-            throw new NoSuchElementException("User with id='" + otherId + "' not found");
-        }
+        User user = findById(id);
+        User otherUser = findById(otherId);
 
         Set<Long> userFriendsIds = user.getFriends();
         Set<Long> otherUserFriendsIds = otherUser.getFriends();
@@ -131,6 +95,37 @@ public class MemoryUserRepository implements UserRepository {
         return findUsersByIds(commonUsers);
     }
 
+    @Override
+    public User findByLogin(String login) {
+        return users.values()
+                .stream()
+                .filter(user -> user.getLogin().equals(login))
+                .findAny()
+                .orElseThrow(() -> new NoSuchElementException("User with login='" + login + "' not found"));
+    }
+
+    @Override
+    public User update(User user) {
+        checkNotExistUserById(user.getId());
+        checkExistUserByLogin(user.getLogin());
+
+        users.put(user.getId(), user);
+        return user;
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        users.remove(id);
+    }
+
+    private List<User> findUsersByIds(Set<Long> usersIds) {
+        List<User> foundUsers = new ArrayList<>();
+
+        for (Long id : usersIds) {
+            foundUsers.add(users.get(id));
+        }
+        return foundUsers;
+    }
 
     private void checkExistUserByLogin(String login) {
         Optional<User> userOptional = users.values()

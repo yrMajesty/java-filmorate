@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class ErrorHandler extends ResponseEntityExceptionHandler {
@@ -54,8 +53,8 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
                 .body(response);
     }
 
-    @ExceptionHandler(value = {NoSuchElementException.class})
-    public ResponseEntity<Object> handleNoSuchElementException(final NoSuchElementException ex) {
+    @ExceptionHandler(value = NotFoundElementException.class)
+    public ResponseEntity<Object> handleNotFoundElementException(final NotFoundElementException ex) {
         Map<String, Object> response = new LinkedHashMap<>();
 
         response.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
@@ -81,4 +80,3 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     }
 
 }
-
