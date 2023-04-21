@@ -5,7 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.UserRepository;
+import ru.yandex.practicum.filmorate.repository.impl.MemoryUserRepository;
+import ru.yandex.practicum.filmorate.service.UserService;
+
 
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -15,10 +17,9 @@ import java.util.NoSuchElementException;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserControllerTest {
+    private UserController userController;
     private static Validator validator;
     private User user;
-
-    private UserController userController;
 
     @BeforeAll
     static void beforeAll() {
@@ -27,8 +28,15 @@ public class UserControllerTest {
 
     @BeforeEach
     void init() {
-        user = new User(null, "user@mail.ru", "userLogin", "userName", LocalDate.now());
-        userController = new UserController(new UserRepository());
+        user = User
+                .builder()
+                .email("user@mail.ru")
+                .login("userLogin")
+                .name("userName")
+                .birthday(LocalDate.now())
+                .build();
+        UserService userService = new UserService(new MemoryUserRepository());
+        userController = new UserController(userService);
     }
 
     @Test

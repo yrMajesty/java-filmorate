@@ -1,54 +1,22 @@
 package ru.yandex.practicum.filmorate.repository;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
-@Slf4j
-@Component
-public class UserRepository {
-    private long idUser = 0;
-    private final Map<Long, User> users = new HashMap<>();
+public interface UserRepository extends Repository<User, Long> {
 
-    public void createUser(User user) {
-        if (users.values()
-                .stream()
-                .anyMatch(userSaved -> userSaved.getLogin().equals(user.getLogin()))) {
-            log.error("User with login {} already exist", user.getLogin());
-            throw new ValidationException("Пользователь с таким логином уже существует");
-        }
-        user.setId(++idUser);
+    Optional<User> findByLogin(String login);
 
-        if (user.getName() == null || user.getName().isEmpty()) {
-            user.setName(user.getLogin());
-        }
+    List<User> findUsersByIds(Set<Long> ids);
 
-        users.put(user.getId(), user);
-    }
+    void addFriend(Long id, Long friendId);
 
+    void deleteFriend(Long id, Long friendId);
 
-    public void updateUser(User user) {
-        if (user.getId() == null || user.getId() <= 0) {
-            log.error("Id updatable user must not be null or less than 1");
-            throw new ValidationException("Id обновляемого пользователя не должен быть null или меньше 1");
+    List<User> getFriendsByUserId(Long id);
 
-        }
-
-        if (!users.containsKey(user.getId())) {
-            log.error("User with id='{}' is not exist", user.getId());
-            throw new NoSuchElementException("Пользователь с id='" + user.getId() + "' не существует");
-        }
-
-        users.put(user.getId(), user);
-    }
-
-    public Collection<User> getAllUsers() {
-        return users.values();
-    }
+    List<User> getCommonFriends(Long id, Long otherId);
 }

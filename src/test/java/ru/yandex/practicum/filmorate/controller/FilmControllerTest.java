@@ -3,9 +3,15 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exception.ExistElementException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.repository.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.UserRepository;
+import ru.yandex.practicum.filmorate.repository.impl.MemoryFilmRepository;
+import ru.yandex.practicum.filmorate.repository.impl.MemoryUserRepository;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -26,8 +32,15 @@ public class FilmControllerTest {
 
     @BeforeEach
     void init() {
-        film = new Film(null, "Название фильма", "Описание фильма", LocalDate.now(), 60);
-        filmController = new FilmController(new FilmRepository());
+        UserRepository userRepository = new MemoryUserRepository();
+        FilmRepository filmRepository = new MemoryFilmRepository(userRepository);
+        film = Film.builder()
+                .name("Название фильма")
+                .description("Описание фильма")
+                .releaseDate(LocalDate.now())
+                .duration(60)
+                .build();
+        filmController = new FilmController(new FilmService(filmRepository, new UserService(userRepository)));
     }
 
     @Test
@@ -93,17 +106,28 @@ public class FilmControllerTest {
     }
 
     @Test
-    void addFilm_validationException_filmAlreadyExist() {
+    void addFilm_existFilmException_filmAlreadyExist() {
         filmController.createFilm(film);
-        Film newFilm = new Film(null, "Название фильма", "Описание фильма", LocalDate.now(), 60);
-        assertThrows(ValidationException.class, () -> filmController.createFilm(newFilm),
+        Film newFilm = Film.builder()
+                .name("Название фильма")
+                .description("Описание фильма")
+                .releaseDate(LocalDate.now())
+                .duration(60)
+                .build();
+        assertThrows(ExistElementException.class, () -> filmController.createFilm(newFilm),
                 "Нет ошибки при создании фильма, который уже есть в базе");
     }
 
     @Test
     void updateFilm_validationException_filmIdIsNull() {
         filmController.createFilm(film);
-        Film newFilm = new Film(null, "Название фильма", "Описание фильма", LocalDate.now(), 60);
+        Film newFilm = Film.builder()
+                .id(null)
+                .name("Название фильма")
+                .description("Описание фильма")
+                .releaseDate(LocalDate.now())
+                .duration(60)
+                .build();
         assertThrows(ValidationException.class, () -> filmController.updateFilm(newFilm),
                 "Нет ошибки при обновлении фильма, id которого null");
     }
@@ -111,7 +135,13 @@ public class FilmControllerTest {
     @Test
     void updateFilm_validationException_filmIdIsIncorrect() {
         filmController.createFilm(film);
-        Film newFilm = new Film(-5L, "Title film", "Description film", LocalDate.now(), 60);
+        Film newFilm = Film.builder()
+                .id(-5L)
+                .name("Title film")
+                .description("Description film")
+                .releaseDate(LocalDate.now())
+                .duration(60)
+                .build();
         assertThrows(ValidationException.class, () -> filmController.updateFilm(newFilm),
                 "Нет ошибки при обновлении фильма с некорректным id");
     }
@@ -119,7 +149,12 @@ public class FilmControllerTest {
     @Test
     void updateFilm_validationException_filmIdIsNotExist() {
         filmController.createFilm(film);
-        Film newFilm = new Film(null, "Название фильма", "Описание фильма", LocalDate.now(), 60);
+        Film newFilm = Film.builder()
+                .name("Название фильма")
+                .description("Описание фильма")
+                .releaseDate(LocalDate.now())
+                .duration(60)
+                .build();
         assertThrows(ValidationException.class, () -> filmController.updateFilm(newFilm),
                 "Нет ошибки при обновлении фильма, id которого не найден в базе");
     }
