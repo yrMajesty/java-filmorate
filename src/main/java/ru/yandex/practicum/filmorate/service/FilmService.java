@@ -1,10 +1,11 @@
 package ru.yandex.practicum.filmorate.service;
 
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.repository.FilmDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundElementException;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.repository.FilmDao;
 
 import java.util.List;
 
@@ -40,11 +41,17 @@ public class FilmService {
 
     public void addLikeByFilmId(Long filmId, Long userId) {
         log.info("Request add like user with id='{}' to film by id='{}'", userId, filmId);
+        if (userId <= 0) {
+            throw new NotFoundElementException("User with id='" + userId + "' not found");
+        }
         filmRepository.addLike(filmId, userId);
     }
 
     public void deleteLikeByFilmId(Long filmId, Long userId) {
         log.info("Request delete like user with id='{}' to film by id='{}'", userId, filmId);
+        if (userId <= 0) {
+            throw new NotFoundElementException("User with id='" + userId + "' not found");
+        }
         filmRepository.deleteLike(filmId, userId);
     }
 

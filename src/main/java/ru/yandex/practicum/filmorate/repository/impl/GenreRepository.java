@@ -17,16 +17,15 @@ import java.util.List;
 public class GenreRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    private static final String SELECT_ALL_GENRES = "SELECT * FROM GENRES";
-    private static final String SELECT_GENRE_BY_ID = "SELECT * FROM GENRES WHERE ID = ?";
-
     public List<Genre> findAll() {
-        return jdbcTemplate.query(SELECT_ALL_GENRES, new BeanPropertyRowMapper<>(Genre.class));
+        return jdbcTemplate.query("SELECT * FROM GENRES",
+                new BeanPropertyRowMapper<>(Genre.class));
     }
 
     public Genre findById(Long id) {
         try {
-            return jdbcTemplate.queryForObject(SELECT_GENRE_BY_ID, new BeanPropertyRowMapper<>(Genre.class), id);
+            return jdbcTemplate.queryForObject("SELECT * FROM GENRES WHERE ID = ?",
+                    new BeanPropertyRowMapper<>(Genre.class), id);
         } catch (DataAccessException ex) {
             log.error("Genre with id='{}' not found", id);
             throw new NotFoundElementException("Genre with id='" + id + "' not found");

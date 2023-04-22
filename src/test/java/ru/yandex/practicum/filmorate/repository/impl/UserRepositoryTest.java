@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
@@ -44,7 +45,7 @@ class UserRepositoryTest {
     @Test
     void findAll_emptyList_notCreatedFilms() {
         List<User> result = underTest.findAll();
-        assertThat(result.size()).isEqualTo(0);
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -52,7 +53,12 @@ class UserRepositoryTest {
         underTest.save(firstUser);
 
         List<User> result = underTest.findAll();
-        assertThat(result.size()).isEqualTo(1);
+        assertAll(
+                () -> assertThat(result).hasSize(1),
+                () -> assertThat(result.get(0)).hasFieldOrPropertyWithValue("name", firstUser.getName()),
+                () -> assertThat(result.get(0)).hasFieldOrPropertyWithValue("email", firstUser.getEmail()),
+                () -> assertThat(result.get(0)).hasFieldOrPropertyWithValue("login", firstUser.getLogin())
+        );
     }
 
     @Test
@@ -82,6 +88,7 @@ class UserRepositoryTest {
         User result = underTest.update(user);
 
         assertThat(result).hasFieldOrPropertyWithValue("name", user.getName());
+        assertThat(result).hasFieldOrPropertyWithValue("login", user.getLogin());
     }
 
     @Test
@@ -95,6 +102,4 @@ class UserRepositoryTest {
         User result = underTest.findById(firstUser.getId());
         assertThat(result).isEqualTo(firstUser);
     }
-
 }
-

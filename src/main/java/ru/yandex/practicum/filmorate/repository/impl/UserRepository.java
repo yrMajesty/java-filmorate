@@ -1,18 +1,18 @@
 package ru.yandex.practicum.filmorate.repository.impl;
 
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
-import ru.yandex.practicum.filmorate.exception.ExistElementException;
-import ru.yandex.practicum.filmorate.exception.NotFoundElementException;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.UserDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.ExistElementException;
+import ru.yandex.practicum.filmorate.exception.NotFoundElementException;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.UserDao;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -27,14 +27,6 @@ public class UserRepository implements UserDao {
     private final JdbcTemplate jdbcTemplate;
     private final FriendshipRepository friendshipRepository;
 
-    private static final String SELECT_FIND_ALL_USERS = "SELECT * FROM USERS";
-    private static final String SELECT_FIND_USER_BY_ID = "SELECT * FROM USERS WHERE ID = ?";
-    private static final String SELECT_FIND_USER_BY_LOGIN = "SELECT * FROM USERS WHERE LOGIN = ?";
-    private static final String SELECT_COUNT_ID = "SELECT COUNT(id) FROM USERS";
-    private static final String INSERT_NEW_USER = "INSERT INTO USERS (NAME, LOGIN, EMAIL, BIRTHDAY) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_USER_BY_ID = "UPDATE USERS SET NAME = ?, LOGIN = ?, EMAIL = ?, BIRTHDAY = ? WHERE ID =?";
-    private static final String DELETE_USER_BY_ID = "DELETE FROM USERS WHERE ID = ?";
-
     @Override
     public User save(User user) {
 
@@ -45,7 +37,9 @@ public class UserRepository implements UserDao {
 
         KeyHolder kh = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
-            final PreparedStatement ps = con.prepareStatement(INSERT_NEW_USER, Statement.RETURN_GENERATED_KEYS);
+            final PreparedStatement ps = con.prepareStatement(
+                    "INSERT INTO USERS (NAME, LOGIN, EMAIL, BIRTHDAY) VALUES (?, ?, ?, ?)",
+                    Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, user.getName());
             ps.setString(2, user.getLogin());
             ps.setString(3, user.getEmail());
@@ -61,13 +55,14 @@ public class UserRepository implements UserDao {
 
     @Override
     public List<User> findAll() {
-        return jdbcTemplate.query(SELECT_FIND_ALL_USERS, new BeanPropertyRowMapper<>(User.class));
+        return jdbcTemplate.query("SELECT * FROM USERS", new BeanPropertyRowMapper<>(User.class));
     }
 
     @Override
     public User findById(Long id) {
         try {
-            return jdbcTemplate.queryForObject(SELECT_FIND_USER_BY_ID, new BeanPropertyRowMapper<>(User.class), id);
+            return jdbcTemplate.queryForObject("SELECT * FROM USERS WHERE ID = ?",
+                    new BeanPropertyRowMapper<>(User.class), id);
         } catch (DataAccessException ex) {
             log.error("User with id='{}' not found", id);
             throw new NotFoundElementException("User with id='" + id + "' not found");
@@ -81,7 +76,7 @@ public class UserRepository implements UserDao {
             throw new NotFoundElementException("User with id='" + user.getId() + "' not found");
         }
 
-        jdbcTemplate.update(UPDATE_USER_BY_ID,
+        jdbcTemplate.update("UPDATE USERS SET NAME = ?, LOGIN = ?, EMAIL = ?, BIRTHDAY = ? WHERE ID = ?",
                 user.getName(), user.getLogin(), user.getEmail(), user.getBirthday(), user.getId());
 
         return user;
@@ -89,13 +84,14 @@ public class UserRepository implements UserDao {
 
     @Override
     public void deleteById(Long id) {
-        jdbcTemplate.update(DELETE_USER_BY_ID, id);
+        jdbcTemplate.update("DELETE FROM USERS WHERE ID = ?", id);
     }
 
     @Override
     public User findByLogin(String login) {
         try {
-            return jdbcTemplate.queryForObject(SELECT_FIND_USER_BY_LOGIN, new BeanPropertyRowMapper<>(User.class), login);
+            return jdbcTemplate.queryForObject("SELECT * FROM USERS WHERE LOGIN = ?",
+                    new BeanPropertyRowMapper<>(User.class), login);
         } catch (DataAccessException ex) {
             log.error("User with login='{}' not found", login);
             throw new NotFoundElementException("User with login='" + login + "' not found");
@@ -104,13 +100,15 @@ public class UserRepository implements UserDao {
 
     @Override
     public boolean isExistUserWithLogin(String login) {
-        List<User> userList = jdbcTemplate.query(SELECT_FIND_USER_BY_LOGIN, new BeanPropertyRowMapper<>(User.class), login);
+        List<User> userList = jdbcTemplate.query("SELECT * FROM USERS WHERE LOGIN = ?",
+                new BeanPropertyRowMapper<>(User.class), login);
         return !userList.isEmpty();
     }
 
     @Override
     public boolean isExistUserById(Long id) {
-        List<User> userList = jdbcTemplate.query(SELECT_FIND_USER_BY_ID, new BeanPropertyRowMapper<>(User.class), id);
+        List<User> userList = jdbcTemplate.query("SELECT * FROM USERS WHERE ID = ?",
+                new BeanPropertyRowMapper<>(User.class), id);
         return !userList.isEmpty();
     }
 

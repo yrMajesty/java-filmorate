@@ -8,6 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.exception.NotFoundElementException;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -20,7 +22,11 @@ class MpaRepositoryTest {
 
     @Test
     void findAll_correctListResult() {
-        assertThat(underTest.findAll()).hasSize(5);
+        List<Mpa> result = underTest.findAll();
+
+        assertThat(result).hasSize(5);
+        assertThat(result.get(1)).hasFieldOrPropertyWithValue("id", 2);
+        assertThat(result.get(1)).hasFieldOrPropertyWithValue("name", "PG");
     }
 
     @Test

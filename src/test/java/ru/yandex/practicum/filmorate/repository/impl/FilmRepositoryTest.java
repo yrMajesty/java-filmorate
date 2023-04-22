@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
@@ -46,7 +47,7 @@ class FilmRepositoryTest {
     @Test
     void findAll_emptyList_notCreatedFilms() {
         List<Film> result = underTest.findAll();
-        assertThat(result.size()).isEqualTo(0);
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -54,7 +55,16 @@ class FilmRepositoryTest {
         underTest.save(firstFilm);
 
         List<Film> result = underTest.findAll();
-        assertThat(result.size()).isEqualTo(1);
+
+        assertAll(
+                () -> assertThat(result).hasSize(1),
+                () -> assertThat(result.get(0))
+                        .hasFieldOrPropertyWithValue("name", firstFilm.getName()),
+                () -> assertThat(result.get(0))
+                        .hasFieldOrPropertyWithValue("id", firstFilm.getId()),
+                () -> assertThat(result.get(0))
+                        .hasFieldOrPropertyWithValue("description", firstFilm.getDescription())
+        );
     }
 
     @Test
@@ -67,6 +77,7 @@ class FilmRepositoryTest {
                 .duration(30)
                 .mpa(new Mpa(1, "G"))
                 .build();
+
         assertThrows(NotFoundElementException.class, () -> underTest.update(film));
     }
 
@@ -77,7 +88,7 @@ class FilmRepositoryTest {
         Film film = Film.builder()
                 .id(firstFilm.getId())
                 .name("Update name film")
-                .description("Describe film")
+                .description("Update describe film")
                 .releaseDate(LocalDate.now())
                 .duration(30)
                 .mpa(new Mpa(1, "G"))
@@ -85,6 +96,7 @@ class FilmRepositoryTest {
         Film result = underTest.update(film);
 
         assertThat(result).hasFieldOrPropertyWithValue("name", film.getName());
+        assertThat(result).hasFieldOrPropertyWithValue("description", film.getDescription());
     }
 
     @Test
@@ -106,5 +118,21 @@ class FilmRepositoryTest {
         assertThat(result).isEmpty();
     }
 
+    @Test
+    void findPopularFilms_listResultContainsOneFilm_oneFilmWasCreated() {
+        underTest.save(firstFilm);
+
+        List<Film> result = underTest.findPopularFilms(10);
+        assertAll(
+                () -> assertThat(result).hasSize(1),
+                () -> assertThat(result).contains(firstFilm),
+                () -> assertThat(result.get(0))
+                        .hasFieldOrPropertyWithValue("name", firstFilm.getName()),
+                () -> assertThat(result.get(0))
+                        .hasFieldOrPropertyWithValue("mpa.id", firstFilm.getMpa().getId()),
+                () -> assertThat(result.get(0))
+                        .hasFieldOrPropertyWithValue("description", firstFilm.getDescription())
+        );
+    }
 }
 

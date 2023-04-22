@@ -17,15 +17,16 @@ import java.util.Optional;
 public class MpaRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    private static final String SELECT_ALL_MPA = "SELECT * FROM MPA";
-    private static final String SELECT_FIND_BY_ID = "SELECT * FROM MPA WHERE ID = ?";
-
     public List<Mpa> findAll() {
-        return jdbcTemplate.query(SELECT_ALL_MPA, new BeanPropertyRowMapper<>(Mpa.class));
+        return jdbcTemplate.query("SELECT * FROM MPA",
+                new BeanPropertyRowMapper<>(Mpa.class));
     }
 
     public Mpa findById(Long id) {
-        Optional<Mpa> optionalMpa = jdbcTemplate.query(SELECT_FIND_BY_ID, new BeanPropertyRowMapper<>(Mpa.class), id).stream().findFirst();
+        Optional<Mpa> optionalMpa = jdbcTemplate.query("SELECT * FROM MPA WHERE ID = ?",
+                        new BeanPropertyRowMapper<>(Mpa.class), id)
+                .stream()
+                .findFirst();
         if (optionalMpa.isEmpty()) {
             log.error("Mpa with id='{}' not found", id);
             throw new NotFoundElementException("Mpa with id='" + id + "' not found");
