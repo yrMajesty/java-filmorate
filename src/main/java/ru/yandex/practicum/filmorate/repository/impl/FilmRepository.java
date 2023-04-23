@@ -20,10 +20,7 @@ import ru.yandex.practicum.filmorate.repository.FilmDao;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -84,10 +81,7 @@ public class FilmRepository implements FilmDao {
                 "SELECT F.*, M.ID AS m_id, M.NAME as m_name FROM FILMS F LEFT JOIN MPA M on M.ID = F.MPA_ID",
                 filmMapper);
 
-        for (Film film : films) {
-            film.setGenres(getGenresById(film.getId()));
-            film.setUserLikes(getLikesByFilmId(film.getId()));
-        }
+        setGenresAndLikesForFilms(films);
         return films;
     }
 
@@ -108,12 +102,13 @@ public class FilmRepository implements FilmDao {
     @Override
     public Film update(Film film) {
         if (!isExistFilmById(film.getId())) {
-            log.error("User with id='{}' already exist", film.getId());
-            throw new NotFoundElementException("User with id='" + film.getId() + "' not found");
+            log.error("Film with id='{}' not found", film.getId());
+            throw new NotFoundElementException("Film with id='" + film.getId() + "' not found");
         }
 
         int update = jdbcTemplate.update(
-                "UPDATE FILMS SET NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, DURATION = ?, RATE = ?, MPA_ID = ? WHERE ID = ?",
+                "UPDATE FILMS SET NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, DURATION = ?, RATE = ?, MPA_ID = ? " +
+                        "WHERE ID = ?",
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
@@ -160,10 +155,8 @@ public class FilmRepository implements FilmDao {
                                     "ORDER BY F.ID DESC " +
                                     "LIMIT ?",
                             filmMapper, count);
-            for (Film film : films) {
-                film.setGenres(getGenresById(film.getId()));
-                film.setUserLikes(getLikesByFilmId(film.getId()));
-            }
+
+            setGenresAndLikesForFilms(films);
             return films;
         }
         List<Film> films = jdbcTemplate
@@ -176,10 +169,8 @@ public class FilmRepository implements FilmDao {
                                 "ORDER BY count_like DESC " +
                                 "LIMIT ?",
                         filmMapper, count);
-        for (Film film : films) {
-            film.setGenres(getGenresById(film.getId()));
-            film.setUserLikes(getLikesByFilmId(film.getId()));
-        }
+
+        setGenresAndLikesForFilms(films);
         return films;
     }
 
@@ -192,7 +183,6 @@ public class FilmRepository implements FilmDao {
     public void deleteLike(Long filmId, Long userId) {
         jdbcTemplate.update("DELETE FROM FILMS_USERS WHERE FILM_ID = ? AND USER_ID = ?", filmId, userId);
     }
-
 
     private boolean isExistFilmById(Long id) {
         return Boolean.TRUE.equals(jdbcTemplate.queryForObject("SELECT COUNT(id) > 0 FROM FILMS WHERE ID = ?",
@@ -240,5 +230,73 @@ public class FilmRepository implements FilmDao {
         filmGenreIds.forEach(filmGenreId ->
                 jdbcTemplate.update("INSERT INTO FILMS_GENRES (FILM_ID, GENRE_ID) VALUES (?, ?)",
                         film.getId(), filmGenreId));
+    }
+
+    private void setGenresAndLikesForFilms(List<Film> films) {
+        Map<Long, Film> mapFilms = films.stream()
+                .collect(Collectors.toMap(Film::getId, film -> film));
+
+        List<Long> ids = films.stream().map(Film::getId).collect(Collectors.toList());
+
+        setGenresForFilmsByIds(ids, mapFilms);
+        setLikesByFilmsIds(ids, mapFilms);
+    }
+
+    private void setLikesByFilmsIds(List<Long> ids, Map<Long, Film> films) {
+        class Row {
+            Long filmId;
+            Long userId;
+        }
+
+        String inSql = String.join(",", Collections.nCopies(ids.size(), "?"));
+
+        List<Row> result = jdbcTemplate.query(
+                String.format("SELECT * FROM FILMS_USERS WHERE FILM_ID in (%s)", inSql),
+                ids.toArray(),
+                (rs, rowNum) -> {
+                    Row row = new Row();
+                    row.filmId = rs.getLong("film_Id");
+                    row.userId = rs.getLong("user_id");
+                    return row;
+                });
+
+        films.values().forEach(film -> film.setUserLikes(new HashSet<>()));
+
+        for (Row row : result) {
+            Long userId = row.userId;
+            Set<Long> userLikes = films.get(row.filmId).getUserLikes();
+            userLikes.add(userId);
+        }
+    }
+
+    private void setGenresForFilmsByIds(List<Long> ids, Map<Long, Film> films) {
+        class Row {
+            Long filmId;
+            Integer genreId;
+            String genreName;
+        }
+
+        String inSql = String.join(",", Collections.nCopies(ids.size(), "?"));
+
+        List<Row> result = jdbcTemplate.query(
+                String.format("SELECT fg.FILM_Id as film_id, g.ID as genre_id, g.NAME as genre_name " +
+                        "FROM GENRES g JOIN FILMS_GENRES fg ON g.ID = fg.GENRE_ID " +
+                        "WHERE fg.FILM_ID in (%s)", inSql),
+                ids.toArray(),
+                (rs, rowNum) -> {
+                    Row row = new Row();
+                    row.filmId = rs.getLong("film_Id");
+                    row.genreId = rs.getInt("genre_id");
+                    row.genreName = rs.getString("genre_name");
+                    return row;
+                });
+
+        films.values().forEach(film -> film.setGenres(new HashSet<>()));
+
+        for (Row row : result) {
+            Long filmId = row.filmId;
+            Set<Genre> genres = films.get(filmId).getGenres();
+            genres.add(new Genre(row.genreId, row.genreName));
+        }
     }
 }
