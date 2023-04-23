@@ -1,14 +1,16 @@
 package ru.yandex.practicum.filmorate.repository;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface Repository<T, ID> {
-    Optional<T> save(T element);
+
+    T save(T t);
 
     List<T> findAll();
 
-    Optional<T> findById(ID id);
+    T findById(ID id);
 
-    Optional<T> update(T element);
+    T update(T t);
+
+    void deleteById(ID id);
 }

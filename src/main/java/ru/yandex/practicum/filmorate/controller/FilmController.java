@@ -7,7 +7,9 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -39,20 +41,17 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable Long id, @PathVariable Long userId) {
-        log.info("Request add like user with id='{}' to film by id='{}'", userId, id);
         filmService.addLikeByFilmId(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable Long id, @PathVariable Long userId) {
-        log.info("Request delete like user with id='{}' to film by id='{}'", userId, id);
         filmService.deleteLikeByFilmId(id, userId);
     }
 
     @GetMapping("/popular")
     public List<Film> getPopularFilms(
             @RequestParam(value = "count", defaultValue = "10", required = false) Integer count) {
-        log.info("Request get popular films");
         return filmService.getPopularFilms(count);
     }
 }

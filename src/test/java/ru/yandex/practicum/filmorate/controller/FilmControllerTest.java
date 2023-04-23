@@ -1,24 +1,25 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
+import ru.yandex.practicum.filmorate.exception.ExistElementException;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.repository.FilmDao;
+import ru.yandex.practicum.filmorate.repository.UserDao;
+import ru.yandex.practicum.filmorate.repository.impl.memory.MemoryFilmRepository;
+import ru.yandex.practicum.filmorate.repository.impl.memory.MemoryUserRepository;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exception.ExistElementException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.repository.FilmRepository;
-import ru.yandex.practicum.filmorate.repository.UserRepository;
-import ru.yandex.practicum.filmorate.repository.impl.MemoryFilmRepository;
-import ru.yandex.practicum.filmorate.repository.impl.MemoryUserRepository;
-import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Validation;
+import javax.validation.ValidationException;
 import javax.validation.Validator;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@RequiredArgsConstructor
 public class FilmControllerTest {
 
     private FilmController filmController;
@@ -32,15 +33,15 @@ public class FilmControllerTest {
 
     @BeforeEach
     void init() {
-        UserRepository userRepository = new MemoryUserRepository();
-        FilmRepository filmRepository = new MemoryFilmRepository(userRepository);
+        UserDao userRepository = new MemoryUserRepository();
+        FilmDao filmRepository = new MemoryFilmRepository(userRepository);
         film = Film.builder()
                 .name("Название фильма")
                 .description("Описание фильма")
                 .releaseDate(LocalDate.now())
                 .duration(60)
                 .build();
-        filmController = new FilmController(new FilmService(filmRepository, new UserService(userRepository)));
+        filmController = new FilmController(new FilmService(filmRepository));
     }
 
     @Test
@@ -158,4 +159,5 @@ public class FilmControllerTest {
         assertThrows(ValidationException.class, () -> filmController.updateFilm(newFilm),
                 "Нет ошибки при обновлении фильма, id которого не найден в базе");
     }
+
 }

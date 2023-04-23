@@ -7,7 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.constraint.FilmDateRelease;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Objects;
@@ -15,8 +18,8 @@ import java.util.Set;
 
 @Builder
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Film {
 
     private Long id;
@@ -35,7 +38,13 @@ public class Film {
     private Integer duration;
 
     @JsonIgnore
-    private final Set<Long> userLikes = new HashSet<>();
+    private Set<Long> userLikes = new HashSet<>();
+
+    private Mpa mpa;
+
+    private Double rate;
+
+    private Set<Genre> genres = new HashSet<>();
 
     @Override
     public boolean equals(Object o) {
